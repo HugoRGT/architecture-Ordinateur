@@ -36,18 +36,19 @@ toHexString:
 loop1:
 	bgt $t2,7,exit
 	lw $t3,24($sp)
+	
 	srl $a0,$t3,28
-	sll $t3,$t3,4
 	jal forDigit
-	sb $v0,0($sp)
+	sb $v0,0($a1)
 	add $a1,$a1,1
+	
+	sll $t3,$t3,4
 	sw $t3,24($sp)
+	
 	addi $t2,$t2,1
 	j loop1
 	
 exit:
-	addi $a1,$a1,'\0'
-	jr $ra
 	
 	addi $sp,$sp,24
 	lw $a0,0($sp)
@@ -67,6 +68,21 @@ toBinaryString:
 	sw $t1,-12($sp)	
 	addi $sp,$sp,-16
 	# A écrire
+	li $t2,0
+loop2:
+	bgt $t2,31,exit2
+	lw $t3,16($sp)
+	srl $a0,$t3,31
+	addi $a0,$a0,0x30
+	sb $a0,0($a1)
+	add $a1,$a1,1
+	sll $t3,$t3,1
+	sw $t3,16($sp)
+	addi $t2,$t2,1
+	j loop2
+	
+exit2:
+
 	addi $sp,$sp,16
 	lw $a0,0($sp)
 	lw $a1,-4($sp)	
@@ -84,7 +100,37 @@ toUnsignedString:
 	sw $v0,-12($sp)	
 	addi $sp,$sp,-16	
 	# A écrire
+	li $t2,0 #position
+	lw $t3,16($sp)
+	
+doWhile1:
+	beq $a0,0,exit3
+	lw $t4,($a0) #nombre1
+	addi $t2,$t2,1
+	divu $a0,$t4,$a2
+	sw $t4,16($sp)
+	j doWhile1
+	
+exit3:
 
+	lw $t5,($t2)
+	sb $0,0($t4)
+	
+doWhile2:
+	beq $t3,0,exit4
+	#lw $t3,16($sp)
+	addi $t2,$t2,-1
+	divu $t3,$a2
+	mfhi $t6
+	jal forDigit
+	sb $a1,0($t2)
+	mflo $t4
+	sw $t3,16($sp)
+	j doWhile2
+	
+exit4:
+	
+	
 	addi $sp,$sp,16			
 	lw $a0,0($sp)
 	lw $a1,-4($sp)
