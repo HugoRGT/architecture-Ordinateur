@@ -150,22 +150,47 @@ parseUnsigned:
 	sw $t0,-12($sp)
 	addi $sp,$sp,-16
 	# A écrire
-	lw $t1,0 #position -- 28
-	lw $t2,0 #resultat -- 24
-	lw $v0,0
+        addiu   $sp,$sp,-48
+        sw      $31,44($sp)
+        sw      $fp,40($sp)
+        sw      $16,36($sp)
+        move    $fp,$sp
+        sw      $a1,48($fp)#chaine
+        sw      $a2,52($fp)#Base
+        sw      $0,24($fp)#resultat
+        sw      $0,28($fp)#position
 while:
-	addu $a1,$a1,$t1
-	beq $a1,$0,quit
-	move $t2,$v0
-	move $a0,$a1
-	jal digit
-	multu $t2,$a2
-	mflo $t2
-	addu $t2,$t2,$v0
-	sw $t2,0($v0)
-	addiu $t1,$t1,1
-	b while
+        lw      $v1,48($fp) #v1 = #a1 = string
+        lw      $v0,28($fp) #v0 = position
+        addu    $v0,$v1,$v0 #position prend la valeur chaine[position] = v1[v0]
+        lb      $v0,0($v0) # assign v0 value to v0
+        beq     $v0,$0,quit #while condition
+        lw      $v1,52($fp) #v1 prend valeur de a2 = base
+        lw      $v0,24($fp) #v0 prend valeur resultat
+        mult    $v1,$v0 #multiplication
+        mflo    $s0 #resultat multiplication
+        lw      $v1,48($fp) #v1 = string
+        lw      $v0,28($fp) #v0 = position
+        addu    $v0,$v1,$v0 #position prend la valeur chaine[position] = v1[v0]
+        lb      $v0,0($v0) # assign v0 value to v0
+        move    $a0,$v0 #put v0 in a0 for digit function
+        jal     digit #call digit function --> v0 = digit number of v1[v0]
+        addu    $v0,$s0,$v0 #addition of resultat
+        sw      $v0,24($fp) #store result in 24 fp
+        lw      $v0,28($fp) #v0 = position
+        nop
+        addiu   $v0,$v0,1 #position + 1
+        sw      $v0,28($fp) #store position in 28 fp
+        j       while
+
 quit:
+        lw      $v0,24($fp)
+        move    $sp,$fp
+        lw      $ra,44($sp)
+        lw      $fp,40($sp)
+        lw      $s0,36($sp)
+        addiu   $sp,$sp,48
+        j       $ra
 
 	addi $sp,$sp,16
 	lw $a0,0($sp)
